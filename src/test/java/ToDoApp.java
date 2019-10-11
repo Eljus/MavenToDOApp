@@ -1,4 +1,5 @@
 import com.codeborne.selenide.CollectionCondition;
+import com.codeborne.selenide.Condition;
 import com.codeborne.selenide.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -21,7 +22,7 @@ public class ToDoApp {
     }
 
     @After
-    public void clearData(){
+    public void clearData() {
         clearBrowserLocalStorage();
         clearBrowserCookies();
     }
@@ -126,5 +127,251 @@ public class ToDoApp {
         mainPage.getAllInsertedToDos().shouldHaveSize(1);
         mainPage.compareVisibleToDoNumbers("1");
         mainPage.getAllInsertedToDos().shouldHave(texts("Math"));
+    }
+
+    @Test
+    public void deleteOneInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        $(byText("Active")).click();
+        mainPage.deleteTodo("Math");
+        mainPage.getAllInsertedToDos().shouldHaveSize(1);
+        mainPage.compareVisibleToDoNumbers("1");
+        mainPage.getAllInsertedToDos().shouldHave(texts("Math"));
+    }
+
+    @Test
+    public void deletedOneInActiveOneInCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.archiveToDoList("Math2");
+        $(byText("Active")).click();
+        mainPage.deleteTodo("Math");
+        $(byText("Completed")).click();
+        mainPage.deleteTodo("Math2");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void changeFromCompletedToActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.archiveToDoList("Math");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+        mainPage.compareVisibleToDoNumbers("1");
+        $(byText("All")).click();
+        mainPage.getAllInsertedToDos().shouldHaveSize(1);
+    }
+
+    @Test
+    public void clearCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.archiveToDoList("Math");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void clearThreeCompletedIfNoToDosInAll() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void clearCompletedMissingIfNoToDosInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        $(byText("Active"));
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void validateDeArchivedInActiveAfterClearedInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        $(byText("Active"));
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        mainPage.archiveToDoList("Math3");
+        $(byText("Active")).click();
+        mainPage.getAllInsertedToDos().shouldHaveSize(3);
+    }
+
+    @Test
+    public void makeActiveAndDelete() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        $(byText("Completed")).click();
+        mainPage.archiveToDoList("Math");
+        mainPage.archiveToDoList("Math2");
+        $(byText("Active")).click();
+        mainPage.deleteTodo("Math");
+        mainPage.deleteTodo("Math2");
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void validateArchivedToDosTextColor() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.archiveToDoList("Math");
+        $(byText("Math")).shouldHave(Condition.cssValue("color", "rgba(217, 217, 217, 1)"));
+    }
+
+    @Test
+    public void placeholderTextInAll() {
+        $("[ng-model='newTodo']").shouldHave(Condition.attribute("placeholder", "What needs to be done?"));
+    }
+
+    @Test
+    public void placeholderTextInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        $(byText("Active")).click();
+        $("[ng-model='newTodo']").shouldHave(Condition.attribute("placeholder", "What needs to be done?"));
+    }
+
+    @Test
+    public void placeholderTextInCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        $(byText("Active")).click();
+        $("[ng-model='newTodo']").shouldHave(Condition.attribute("placeholder", "What needs to be done?"));
+    }
+
+    @Test
+    public void validateDefaultSelectedModule() {
+        $(byText("All")).shouldHave(Condition.attribute("class", "selected"));
+    }
+
+    @Test
+    public void validateActiveModuleIsSelectedAfterMovingThere() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        $(byText("Active")).click();
+        $(byText("Active")).shouldHave(Condition.attribute("class", "selected"));
+    }
+
+    @Test
+    public void validateCompletedModuleIsSelectedAfterMovingThere() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        $(byText("Completed")).click();
+        $(byText("Completed")).shouldHave(Condition.attribute("class", "selected"));
+    }
+
+    @Test
+    public void abilityToArchiveAllAtOnceInAll() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        mainPage.toggleAll();
+        mainPage.getAllInsertedToDos().shouldHaveSize(3);
+    }
+
+    @Test
+    public void abilityToArchiveAllAtOnceInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        $(byText("Active")).click();
+        mainPage.toggleAll();
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void abilityToDeArchiveAllAtOnceInCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        mainPage.toggleAll();
+        $(byText("Completed")).click();
+        mainPage.toggleAll();
+        mainPage.getAllInsertedToDos().shouldHaveSize(0);
+    }
+
+    @Test
+    public void toggledAllAtOnceShouldAppearInCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        mainPage.toggleAll();
+        $(byText("Completed")).click();
+        mainPage.getAllInsertedToDos().shouldHave(texts("Math", "Math2", "Math3"));
+    }
+
+    @Test
+    public void toggledAllAtOnceInActiveShouldAppearInCompleted() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        $(byText("Active")).click();
+        mainPage.toggleAll();
+        $(byText("Completed")).click();
+        mainPage.getAllInsertedToDos().shouldHave(texts("Math", "Math2", "Math3"));
+    }
+
+    @Test
+    public void toggledAllAtOnceInCompletedShouldAppearInAll() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        $(byText("Completed")).click();
+        mainPage.toggleAll();
+        $(byText("All")).click();
+        mainPage.getAllInsertedToDos().shouldHave(texts("Math", "Math2", "Math3"));
+    }
+
+    @Test
+    public void toggledAllAtOnceInCompletedShouldAppearInActive() {
+        MainPage mainPage = new MainPage();
+        mainPage.typeIntoTodoList("Math");
+        mainPage.typeIntoTodoList("Math2");
+        mainPage.typeIntoTodoList("Math3");
+        mainPage.toggleAll();
+        $(byText("Completed")).click();
+        mainPage.toggleAll();
+        $(byText("Active")).click();
+        mainPage.getAllInsertedToDos().shouldHave(texts("Math", "Math2", "Math3"));
     }
 }

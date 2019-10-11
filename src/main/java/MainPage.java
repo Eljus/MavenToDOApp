@@ -31,4 +31,8 @@ class MainPage {
         $(byText(toDoToDelete)).hover();
         $(byText(toDoToDelete)).parent().find(By.cssSelector("[class='destroy']")).hover().click();
     }
+
+    void toggleAll() {
+        $("[for='toggle-all']").click();
+    }
 }
